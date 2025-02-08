@@ -1,0 +1,61 @@
+ -- MAIN KPIS
+Select SUM(total_price) AS Total_Revenue , --sum of all prices of all pizza orders 
+(SUM(total_price) / COUNT (DISTINCT order_id)) AS Avg_Order_Value, -- (the avg amount spent per order) calc by dividing total revenue by total number of orders
+
+SUM(quantity) AS Total_Pizzas_Sold , --total number of pizzas sold
+ 
+COUNT(DISTINCT order_id ) AS Total_Orders, -- total number of orders placed 
+
+--(avg no of pizzas sold per order) calc by dividing total pizzas by total orders placed CASTING FOR OBTAINING 2 DECIMAL POINT VALUES
+CAST(CAST(SUM(quantity) AS DECIMAL (10,2)) / CAST(COUNT(DISTINCT order_id) AS DECIMAL(10,2)) AS DECIMAL(10,2)) AS Average_Pizzas_Per_Order
+
+
+FROM pizza_sales --main database name
+
+
+--calculating percenatage total sales of pizzas by their category
+SELECT
+pizza_category, CAST (SUM(total_price)  AS DECIMAL(10,2)) AS Total_Revenue,
+ CAST(CAST(SUM(total_price) *100 AS DECIMAL(10,2)) / (SELECT SUM(total_price) FROM pizza_sales)  AS DECIMAL(10,2)) AS Percentage_total_sales
+ -- here total price is being calc by category and multiply by 100 for percentage, cast for 2 decimal places and then divide by total revenue
+
+FROM pizza_sales
+GROUP BY pizza_category
+
+--Hourly Trend
+
+SELECT
+DATEPART(HOUR, order_time) AS Order_Hoirs, COUNT(DISTINCT order_id) AS Total_Orders
+
+FROM pizza_sales
+GROUP BY DATEPART(HOUR, order_time)
+ORDER BY DATEPART(HOUR, order_time)
+
+--Daily Trend
+SELECT 
+DATENAME(DW, order_date) AS Order_day, COUNT(DISTINCT order_id) AS Total_Orders
+
+FROM pizza_sales 
+GROUP BY DATENAME(DW, order_date)
+
+--total pizzas sold by category wise 
+SELECT 
+pizza_category, SUM(quantity) AS total_quantity_sold
+
+FROM pizza_sales
+GROUP BY pizza_category
+ORDER BY total_quantity_sold DESC
+
+-- top 5 best seller query pizzas 
+SELECT 
+TOP 5 pizza_name, SUM(quantity) AS total_pizzas_sold
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY total_pizzas_sold DESC
+
+-Bottom 5 worst sellers
+SELECT 
+TOP 5 pizza_name, SUM(quantity) AS total_pizzas_sold
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY total_pizzas_sold ASC
